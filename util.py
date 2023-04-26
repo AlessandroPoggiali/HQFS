@@ -44,10 +44,6 @@ def rbo(S,T, p= 0.9):
 
     return rbo_ext
 
-def compute_angle(x, y):
-    x = np.array(x)
-    y = np.array(y)
-    return np.arccos((x @ y) / (norm(x) * norm(y)))  # in range [0, pi]
 
 def generate_dataset(n_samples, n_features, n_informative, seed=123, mu=0, std=0.05):    
     
