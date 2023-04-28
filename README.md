@@ -1,2 +1,2 @@
-# QFS
-Quantum Feature Selection with Variance Estimation
+# HQFS
+Hybrid Quantum Feature Selection with Variance Estimation
