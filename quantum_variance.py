@@ -1,6 +1,10 @@
 import random
 import math
 import numpy as np
+import sys
+import pandas as pd
+
+import multiprocessing as mp
 
 import matplotlib.pyplot as plt
 from matplotlib import cm, colors
@@ -97,10 +101,9 @@ class qvar_measure_all():
         return var*norm_factor
 
 class qvar_AE():
-    def __init__(self, eval_qubits, post_processing=True) -> None:
+    def __init__(self, eval_qubits) -> None:
         self.eval_qubits = eval_qubits
         self.plot_filename = 'plot/qvar_AE.png'
-        self.post_processing = post_processing
         
     def compute_variance(self, values):
         i_qbits = int(math.ceil(math.log2(len(values))))
@@ -151,10 +154,7 @@ class qvar_AE():
         #norm_factor = 2**n_hadamard/len(values)
         norm_factor = 4*len(values)
 
-        if self.post_processing: 
-            return ae_result.mle*norm_factor
-        else:
-            return ae_result.estimation*norm_factor
+        return ae_result.estimation*norm_factor, ae_result.mle*norm_factor
 
 class qvar_FAE():
     def __init__(self, accuracy, max_iter) -> None:
@@ -310,34 +310,38 @@ def test_comparison():
     f_mse.close()
 
 def test_m_ae():
-    mlist = [6]
-    N = 16
-    n_variances = 5
-    np.random.seed(123)
+    mlist = [1,2,3,4,5,6]
+    N = 32
+    n_variances = 10
 
     f_mse = open('result/mse.csv', 'w')
 
-    f_mse.write("m,qvar_ae\n")
+    f_mse.write("m,mean_qvar_ae,std_qvar_ae,mean_qvar_ae_ml,std_qvar_ae_ml\n")
     
     classic_variances = []
     ran_values = []
     for i in range(n_variances):
+        np.random.seed(i*123)
         ran_values.append([np.random.uniform(-1,1) for _ in range(N)])
         classic_variances.append(np.var(ran_values[i]))
 
     for m in mlist:
         f_result = open('result/m=' + str(m) + '.csv', 'w')
-        f_result.write("classic,qvar_ae\n")
+        f_result.write("classic,qvar_ae,qvar_ae_ml\n")
         
-        qvars_2 = []
-        qvar_2 = qvar_AE(m)
+        qvars_ae = []
+        qvars_ae_ml = []
+        qvar_ae = qvar_AE(m)
         for i in range(n_variances):
             print("m = " + str(m) + " - v" + str(i))
-            qvars_2.append(qvar_2.compute_variance(np.arcsin(ran_values[i])))
-            f_result.write(str(classic_variances[i]) + ',' + str(qvars_2[i]) + '\n')
+            ae_result, ae_result_mle = qvar_ae.compute_variance(np.arcsin(ran_values[i]))
+            qvars_ae.append(ae_result)
+            qvars_ae_ml.append(ae_result_mle)
+            f_result.write(str(classic_variances[i]) + ',' + str(qvars_ae[i]) + ',' + str(qvars_ae_ml[i]) + '\n')
 
-        plt.plot(qvars_2, label='qvar_ae')
-        plt.plot(classic_variances, label='classic')
+        plt.plot(qvars_ae, label='QVAR')
+        plt.plot(qvars_ae_ml, label='ML-QVAR')
+        plt.plot(classic_variances, label='VAR')
         plt.legend(loc="upper left")
         plt.savefig("plot/m=" + str(m) + ".png")
 
@@ -345,9 +349,11 @@ def test_m_ae():
         plt.clf() 
         plt.close('all')
 
-        differences_qvars_2 = [(q-c)**2 for q,c in zip(qvars_2, classic_variances)]
+        differences_qvars_ae = [(q-c)**2 for q,c in zip(qvars_ae, classic_variances)]
+        differences_qvars_ae_ml = [(q-c)**2 for q,c in zip(qvars_ae_ml, classic_variances)]
 
-        plt.plot(differences_qvars_2, label='qvar_ae')
+        plt.plot(differences_qvars_ae, label='QVAR')
+        plt.plot(differences_qvars_ae_ml, label='ML-QVAR')
         plt.legend(loc="upper left")
         plt.savefig("plot/errorm=" + str(m) + ".png")
 
@@ -355,16 +361,107 @@ def test_m_ae():
         plt.clf() 
         plt.close('all')
 
-        f_mse.write(str(m) + "," + str(np.mean(differences_qvars_2)) + "-" + str(np.var(differences_qvars_2)) + '\n')
+        f_mse.write(str(m) + "," + str(np.mean(differences_qvars_ae)) + "," + str(np.var(differences_qvars_ae)) +
+                     "," + str(np.mean(differences_qvars_ae_ml)) + "," + str(np.var(differences_qvars_ae_ml)) + '\n') 
 
         f_result.close()
 
 
     f_mse.close()
 
+def test_m(m, idx, chunk):
+    qvar_ae = qvar_AE(m)
+    filename = 'result/chunk_' + str(idx) + '.csv'
+    f = open(filename, 'w')
+
+    for ran in chunk:
+        ae_result, ae_result_mle = qvar_ae.compute_variance(np.arcsin(ran))
+        f.write(str(np.var(ran)) + ',' + str(ae_result) + ',' + str(ae_result_mle) + '\n')
+    f.close()
+
+def test_m_ae_parallel(n_processes):
+    mlist = [1,2,3,4,5,6]
+    N = 32
+    n_variances = 5
+
+    f_mse = open('result/mse.csv', 'w')
+
+    f_mse.write("m,mean_qvar_ae,std_qvar_ae,mean_qvar_ae_ml,std_qvar_ae_ml\n")
+    
+    classic_variances = []
+    ran_values = []
+    for i in range(n_variances):
+        np.random.seed(i*123)
+        ran_values.append([np.random.uniform(-1,1) for _ in range(N)])
+
+    for m in mlist:
+        print("m="+str(m)+"\n")
+        chunks = np.array_split(ran_values, n_processes)
+
+        processes = [mp.Process(target=test_m, args=(m, idx, chunk))  for idx, chunk in enumerate(chunks)]
+        for p in processes:
+                p.start()
+
+        for p in processes:
+            p.join()
+            print("process ", p, " terminated")
+
+        print("Processes joined")
+
+        filename = 'result/random' + "_m" + str(m) + ".csv"
+        f = open(filename, 'w')
+        f.write("idx,cs_var,qvar_ae,qvar_ae_ml\n")
+        idx_col = 0
+        for idx_chunk in range(len(chunks)):
+            f1_name  = "result/chunk_" + str(idx_chunk) + ".csv"
+            with open(f1_name) as f1:
+                lines = [line.rstrip('\n') for line in f1]
+                for line in lines:
+                    f.write(str(idx_col)+","+line+'\n')
+                    idx_col = idx_col + 1
+            f1.close()
+        f.close()
+
+        df_m = pd.read_csv(filename,sep=',')
+        qvars_ae = df_m['qvar_ae']
+        classic_variances = df_m['cs_var']
+        qvars_ae_ml = df_m['qvar_ae_ml']
+
+        differences_qvars_ae = [(q-c)**2 for q,c in zip(qvars_ae, classic_variances)]
+        differences_qvars_ae_ml = [(q-c)**2 for q,c in zip(qvars_ae_ml, classic_variances)]
+
+        #plt.plot(differences_qvars_ae, label='QVAR')
+        #plt.plot(differences_qvars_ae_ml, label='ML-QVAR')
+        #plt.legend(loc="upper left")
+        #plt.savefig("plot/errorm=" + str(m) + ".png")
+
+        #plt.cla() 
+        #plt.clf() 
+        #plt.close('all')
+
+        f_mse.write(str(m) + "," + str(np.mean(differences_qvars_ae)) + "," + str(np.var(differences_qvars_ae)) +
+                     "," + str(np.mean(differences_qvars_ae_ml)) + "," + str(np.var(differences_qvars_ae_ml)) + '\n') 
+    f_mse.close()
+
+
 if __name__ == "__main__":
-    #test_m_ae()
-    #exit()
+    
+    if len(sys.argv) != 2:
+        print("ERROR: type '" + str(sys.argv[0]) + " n_processes' to execute the test")
+        exit()
+   
+    try:
+        n_processes = int(sys.argv[1])
+    except ValueError:
+        print("ERROR: specify a positive integer for the number of processes")
+        exit()
+    
+    if n_processes < 0:
+        print("ERROR: specify a positive integer for the number of processes")
+        exit()
+
+    test_m_ae_parallel(n_processes)
+    exit()
 
     points = []
     m = 3
