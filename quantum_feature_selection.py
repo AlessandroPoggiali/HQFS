@@ -73,7 +73,7 @@ def parallel_test(dataset, dataset_name, sample_size, shots, eval_qubits, n_proc
 
     filename = 'result/' + dataset_name + "_m" + str(eval_qubits) + ".csv"
     f = open(filename, 'w')
-    f.write("idx,feature,cs_var,cp_var,qvar_s,qvar_ae,qvar_ae_fae\n")
+    f.write("idx,feature,cs_var,cp_var,qvar_s,qvar_ae,qvar_ae_ml\n")
     idx_col = 0
     for idx_chunk in range(len(chunks)):
         f1_name  = "result/chunk_" + str(idx_chunk) + ".csv"
@@ -90,9 +90,8 @@ def parallel_test(dataset, dataset_name, sample_size, shots, eval_qubits, n_proc
 def quantum_feature_selection(dataset, sample, correction_factor, chunk_idx, columns, shots, eval_qubits, max_iter=1):
 
     #qvar_measures = qvar_measure_all(shots)
-    #qvar_ae = qvar_AE(eval_qubits, post_processing=False)
-    #qvar_ae_ml = qvar_AE(eval_qubits, post_processing=True)
-    qvar_fae = qvar_FAE(0.01, max_iter)
+    qvar_ae = qvar_AE(eval_qubits)
+    #qvar_fae = qvar_FAE(0.01, max_iter)
 
     filename = 'result/chunk_' + str(chunk_idx) + '.csv'
     f = open(filename, 'w')
@@ -105,26 +104,28 @@ def quantum_feature_selection(dataset, sample, correction_factor, chunk_idx, col
         ran_values = np.arcsin(sample[column_name])
 
         #quantum_variance_measures = qvar_measures.compute_variance(ran_values)*correction_factor
-        #quantum_variance_ae = qvar_ae.compute_variance(ran_values)*correction_factor
-        #quantum_variance_ae_ml = qvar_ae_ml.compute_variance(ran_values)*correction_factor
-        quantum_variance_fae = qvar_fae.compute_variance(ran_values)
+        quantum_variance_ae, quantum_variance_ae_ml  = qvar_ae.compute_variance(ran_values)*correction_factor
+        #quantum_variance_fae = qvar_fae.compute_variance(ran_values)
         
-        quantum_variance_ae = quantum_variance_measures = 0
+        quantum_variance_fae = quantum_variance_measures = 0
         
         #f.write('cs_var,cp_var,qvar_s,qvar_ae,qvar_fae\n')
-        f.write(column_name+','+str(cs_var)+","+str(cp_var)+","+str(quantum_variance_measures)+","+str(quantum_variance_ae)+","+str(quantum_variance_fae)+'\n')
+        f.write(column_name+','+str(cs_var)+","+str(cp_var)+","+str(quantum_variance_measures)+","+str(quantum_variance_ae)+","+str(quantum_variance_ae_ml)+'\n')
         #f.write(column_name+','+str(cs_var)+","+str(cp_var)+","+str(quantum_variance_measures)+","+str(quantum_variance_ae)+","+str(quantum_variance_ae_ml)+'\n')
     f.close()
 
 
 def synthetic_test_AE():
-    dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.5)
-    #scaler = MinMaxScaler(feature_range=(-0.9999, 0.9999))
-    #dataset.loc[:,:] = scaler.fit_transform(dataset.loc[:,:])
-
-    for eval_qubits in [2,3,4,5,6,7]:
+    dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.2)
+    print("Dataset synth2 std=0.20\n")
+    for eval_qubits in [2,3,4,5]:
         print("\n\nTest QFS with " + str(eval_qubits) + " additional qubits\n")
         parallel_test(dataset, "synth2", 32, 1000, eval_qubits, n_processes)
+    print("Dataset synth2 std=0.35\n")
+    dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.35)
+    for eval_qubits in [2,3,4,5]:
+        print("\n\nTest QFS with " + str(eval_qubits) + " additional qubits\n")
+        parallel_test(dataset, "synth4", 32, 1000, eval_qubits, n_processes)
 
 def synthetic_test_measureall():
     dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.5)
@@ -137,11 +138,11 @@ def synthetic_test_measureall():
         parallel_test(dataset, "synth2", 32, shots, eval_qubits, n_processes)
 
 def synthetic_test_FAE():
-    dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.5)
+    dataset = generate_dataset(64, 10, 7, mu=0.5, std=0.05)
 
     for max_iter in [1,2,3,4,5]:
         print("\n\nTest QFS (FAE) with " + str(max_iter) + " iterations\n")
-        parallel_test(dataset, "synth2", 32, 1000, max_iter, n_processes, max_iter)
+        parallel_test(dataset, "synth1", 64, 1000, max_iter, n_processes, max_iter)
 
 def wine_test():
     dataset = datasets.load_wine(as_frame=True).frame
@@ -154,6 +155,22 @@ def wine_test():
         #shots = (2**m-1)**2
         print("\n\nTest QFS (FAE) with " + str(l) + " iterations\n")
         parallel_test(dataset, 'wine', sample_size, 0, l, n_processes, l)
+
+def lungcancer_test(n_processes):
+    col = ['f'+str(x) for x in list(range(57))]
+    dataset = pd.read_csv('./data/lung-cancer.data',header=None,names=col)
+    dataset = dataset.replace('?', np.nan)
+    
+    for c in col:
+        mean_val = pd.to_numeric(dataset[c], errors='coerce').mean()
+        dataset[c].fillna(value=mean_val,inplace=True)
+    print(dataset.head())
+    scaler = MinMaxScaler(feature_range=(-0.9999, 0.9999))
+    dataset.loc[:,:] = scaler.fit_transform(dataset.loc[:,:])
+
+    for eval_qubits in [2,3,4,5]:
+        print("\n\nTest QFS with " + str(eval_qubits) + " evaluation qubits\n")
+        parallel_test(dataset, "lung_cancer", 32, 1000, eval_qubits, n_processes)
 
 if __name__ == "__main__":
 
@@ -174,10 +191,12 @@ if __name__ == "__main__":
         print("ERROR: specify a positive integer for the number of processes")
         exit()
 
+    lungcancer_test(n_processes)
+    exit()
     #synthetic_test_measureall()   
-    wine_test()
-    #synthetic_test_FAE()
-    exit()    
+    #wine_test()
+    #synthetic_test_AE()
+    #exit()    
 
     dataset = datasets.load_wine(as_frame=True).frame
     dataset = dataset.drop('target', axis=1)
