@@ -10,3 +10,12 @@ The **QVAR** quantum subroutine computes the variance of a given feature using t
 
 The **ML-QVAR** subroutine combines quantum and classical computing techniques by using the Amplitude Estimation algorithm with the *Maximum Likelihood Estimator* postprocessing to compute the variance of a given feature. This provides even more accurate estimates of feature variances.
 
+## Quickstart
+Clone this repo with
+
+`git clone https://github.com/AlessandroPoggiali/HQFS.git`
+
+The `test.py` file shows simple executions of the HQFS algorithm on synthetic and real datasets. To run an even simple demostration of the HQFS algorithm run 
+
+`python3 ./HQFS`
+
