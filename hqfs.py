@@ -41,5 +41,5 @@ if __name__ == "__main__":
     from qvar import ML_QVAR
 
     qvar = ML_QVAR(3)
-    features = HQFS(dataset, qvar, threshold=0.08, n_processes=2)
+    features = HQFS(dataset, qvar, threshold=0.08, n_processes=1)
     print("Selected features = ", features)
