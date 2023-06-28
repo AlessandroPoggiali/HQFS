@@ -15,7 +15,7 @@ The **ML-QVAR** subroutine combines quantum and classical computing techniques b
 To run a simple demostration of the HQFS algorithm, follow these steps:
 * Make sure you have Qiskit installed on your computer
 * Clone this repo with `git clone https://github.com/AlessandroPoggiali/HQFS.git`
-* Navigate to the HQFS directory and run the command `python3 ./hqfs`
+* Navigate to the HQFS directory and run the command `python3 hqfs`
 
 The `test.py` file contains code that will run the HQFS algorithm on both synthetic and real datasets. By running this file, you will be able to see how the algorithm performs on different types of data. The output of the algorithm will be displayed in the terminal window.
 
