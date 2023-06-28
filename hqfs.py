@@ -3,6 +3,7 @@ import multiprocessing as mp
 
 def HQFS_worker(to_drop, qvar, dataset, threshold, correction_factor, features):
     for f in features:
+        print("featrue " + str(f))
         values = np.arcsin(dataset[f])
         variance = qvar.compute_variance(values)*correction_factor
         if variance < threshold:
