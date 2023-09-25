@@ -1,15 +1,18 @@
 import numpy as np
 import multiprocessing as mp
+from util import generate_dataset
+from qvar import ML_QVAR
 
 def HQFS_worker(to_drop, qvar, dataset, threshold, correction_factor, features):
     for f in features:
-        print("featrue " + str(f))
         values = np.arcsin(dataset[f])
         variance = qvar.compute_variance(values)*correction_factor
+        print("featrue: " + str(f) + " - var: " + str(variance))
         if variance < threshold:
             to_drop.put(f)
 
 def HQFS(dataset, qvar, threshold=1e-02, sample_size=None, correction_factor=1, n_processes=1):
+    print("variance threshold: " + str(threshold))
     features = list(dataset.columns)
     to_drop = mp.Queue() 
     if n_processes > 1:
@@ -35,11 +38,8 @@ def HQFS(dataset, qvar, threshold=1e-02, sample_size=None, correction_factor=1, 
 
 if __name__ == "__main__":
 
-    from util import generate_dataset
-
     dataset = generate_dataset(8, 10, 7, mu=0.05, std=0.2)
-
-    from qvar import ML_QVAR
+    print("List of features: "+ str(list(dataset.columns)))
 
     qvar = ML_QVAR(3)
     features = HQFS(dataset, qvar, threshold=0.08, n_processes=1)
