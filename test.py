@@ -48,10 +48,30 @@ def wine_test(n_processes):
         features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
         print("Selected features (HQFS): ", features)
 
-        print("\n\nTest HQFS with " + str(m) + " evaluation qubits\n")
+        print("\n\nTest ML-HQFS with " + str(m) + " evaluation qubits\n")
         qvar = ML_QVAR(m)
         features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
         print("Selected features (ML-HQFS): ", features)
+
+def breast_test(n_processes):
+
+    dataset = datasets.load_breast_cancer(as_frame=True).frame
+    dataset = dataset.drop('target', axis=1)
+    scaler = MinMaxScaler(feature_range=(-0.9999, 0.9999))
+    dataset.loc[:,:] = scaler.fit_transform(dataset.loc[:,:])
+    dataset = dataset.sample(n=16, random_state=123)
+
+    for m in [6]:
+        #print("\n\nTest HQFS with " + str(m) + " evaluation qubits\n")
+        #qvar = QVAR(m)
+        #features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+        #print("Selected features (HQFS): ", features)
+
+        print("\n\nTest ML-HQFS with " + str(m) + " evaluation qubits\n")
+        qvar = ML_QVAR(m)
+        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+        print("Selected features (ML-HQFS): ", features)
+
 
 if __name__ == "__main__":
 
@@ -69,6 +89,7 @@ if __name__ == "__main__":
         print("ERROR: specify a positive integer for the number of processes")
         exit()
 
-    wine_test(n_processes)
+    #wine_test(n_processes)
+    breast_test(n_processes)
     #synthetic_test_AE()
    
