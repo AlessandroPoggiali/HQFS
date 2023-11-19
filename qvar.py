@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from qiskit.circuit.library import MCMT, RYGate
 from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit, Aer, execute, BasicAer
 from qiskit.algorithms import FasterAmplitudeEstimation
-from qiskit.providers.aer import AerSimulator
 from qiskit.utils import QuantumInstance
 
 from qiskit.algorithms import EstimationProblem
