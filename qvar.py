@@ -6,7 +6,7 @@ import multiprocessing as mp
 import matplotlib.pyplot as plt
 
 from qiskit.circuit.library import MCMT, RYGate
-from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit, Aer, execute, BasicAer
+from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit, Aer, execute, BasicAer, AerSimulator
 from qiskit.algorithms import FasterAmplitudeEstimation
 from qiskit.utils import QuantumInstance
 
@@ -179,8 +179,9 @@ class ML_QVAR():
         qc.h(q)
         qc.x(q) # Classic AE consider |11..1> state as target conf
 
-        backend = Aer.get_backend("statevector_simulator")
-        backend.set_options(device='GPU')
+        #backend = Aer.get_backend("qasm_simulator")
+        backend = AerSimulator(method='statevector', device='GPU')
+        #backend.set_options(device='GPU')
         quantum_instance = QuantumInstance(backend)
             
         ae = AmplitudeEstimation(
