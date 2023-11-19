@@ -179,7 +179,7 @@ class ML_QVAR():
         qc.h(q)
         qc.x(q) # Classic AE consider |11..1> state as target conf
 
-        backend = Aer.get_backend("qasm_simulator")
+        backend = Aer.get_backend("statevector_simulator")
         backend.set_options(device='GPU')
         quantum_instance = QuantumInstance(backend)
             
