@@ -6,7 +6,8 @@ import multiprocessing as mp
 import matplotlib.pyplot as plt
 
 from qiskit.circuit.library import MCMT, RYGate
-from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit, Aer, execute, BasicAer, AerSimulator
+from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit, Aer, execute, BasicAer
+from qiskit.providers.aer import *
 from qiskit.algorithms import FasterAmplitudeEstimation
 from qiskit.utils import QuantumInstance
 
