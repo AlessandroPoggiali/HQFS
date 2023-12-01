@@ -1,6 +1,5 @@
 
 from hqfs import HQFS
-from qvar import QVAR, ML_QVAR
 from sklearn import datasets
 from sklearn.preprocessing import MinMaxScaler
 from util import generate_dataset
@@ -12,12 +11,10 @@ def synthetic_test():
     print("Dataset synth1 std=0.20\n")
     for m in [2,3,4,5]:
         print("\n\nTest HQFS with " + str(m) + " additional qubits\n")
-        qvar = QVAR(m)
-        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=False)
         print("Selected features (HQFS): ", features)
 
-        qvar = ML_QVAR(m)
-        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=True)
         print("Selected features (ML-HQFS): ", features)
 
     
@@ -25,12 +22,11 @@ def synthetic_test():
     dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.005)
     for m in [2,3,4,5]:
         print("\n\nTest HQFS with " + str(m) + " additional qubits\n")
-        qvar = QVAR(m)
-        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+
+        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=False)
         print("Selected features (HQFS): ", features)
 
-        qvar = ML_QVAR(m)
-        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=True)
         print("Selected features (ML-HQFS): ", features)
 
 
@@ -44,13 +40,13 @@ def wine_test(n_processes):
 
     for m in [2,3,4,5]:
         print("\n\nTest HQFS with " + str(m) + " evaluation qubits\n")
-        qvar = QVAR(m)
-        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+
+        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=False)
         print("Selected features (HQFS): ", features)
 
         print("\n\nTest ML-HQFS with " + str(m) + " evaluation qubits\n")
-        qvar = ML_QVAR(m)
-        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+
+        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=True)
         print("Selected features (ML-HQFS): ", features)
 
 def breast_test(n_processes):
@@ -61,15 +57,15 @@ def breast_test(n_processes):
     dataset.loc[:,:] = scaler.fit_transform(dataset.loc[:,:])
     dataset = dataset.sample(n=16, random_state=123)
 
-    for m in [6]:
+    for m in [3]:
         #print("\n\nTest HQFS with " + str(m) + " evaluation qubits\n")
         #qvar = QVAR(m)
         #features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
         #print("Selected features (HQFS): ", features)
 
         print("\n\nTest ML-HQFS with " + str(m) + " evaluation qubits\n")
-        qvar = ML_QVAR(m)
-        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes)
+
+        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=True)
         print("Selected features (ML-HQFS): ", features)
 
 

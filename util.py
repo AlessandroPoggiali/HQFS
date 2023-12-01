@@ -61,3 +61,10 @@ def generate_dataset(n_samples, n_features, n_informative, seed=123, mu=0, std=0
         df[feature] = np.random.normal(loc=mu, scale=std, size=n_samples)
 
     return df
+
+def _register_switcher(circuit, value, qubit_index):
+    bin_str_pattern = '{:0%sb}' % len(qubit_index)
+    value = bin_str_pattern.format(value)[::-1]
+    for idx, bit in enumerate(value):
+        if not int(bit):
+            circuit.x(qubit_index[idx])
