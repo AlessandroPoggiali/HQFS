@@ -8,27 +8,27 @@ import sys
 def synthetic_test():
 
     dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.05)
-    print("Dataset synth1 std=0.20\n")
-    for m in [2,3,4,5]:
+    print("Dataset synth1 std=0.05\n")
+    for m in [2]:
         print("\n\nTest HQFS with " + str(m) + " additional qubits\n")
-        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=False)
+        features = HQFS(dataset, dataset_name="synth1_"+str(m)+"_AE", threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=False)
         print("Selected features (HQFS): ", features)
 
-        features = HQFS(dataset, qvar, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=True)
+        features = HQFS(dataset, dataset_name="synth1_"+str(m)+"_ML", threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=True)
         print("Selected features (ML-HQFS): ", features)
 
-    
+        
     print("Dataset synth2 std=0.35\n")
-    dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.005)
-    for m in [2,3,4,5]:
+    dataset = generate_dataset(32, 10, 7, mu=0.5, std=0.5)
+    for m in [2]:
         print("\n\nTest HQFS with " + str(m) + " additional qubits\n")
 
-        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=False)
+        features = HQFS(dataset, dataset_name="synth2_"+str(m)+"_AE", threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=False)
         print("Selected features (HQFS): ", features)
 
-        features = HQFS(dataset, threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=True)
+        features = HQFS(dataset, dataset_name="synth2_"+str(m)+"_ML", threshold=0.08, n_processes=n_processes, version="AE", eval_qubits=m, post_processing=True)
         print("Selected features (ML-HQFS): ", features)
-
+    
 
 def wine_test(n_processes):
 
@@ -86,6 +86,6 @@ if __name__ == "__main__":
         exit()
 
     #wine_test(n_processes)
-    breast_test(n_processes)
-    #synthetic_test_AE()
+    #breast_test(n_processes)
+    synthetic_test()
    
