@@ -2,7 +2,7 @@
 
 The Hybrid Quantum Feature Selection (HQFS) algorithm is an innovative method for feature selection that utilizes both quantum and classical computing techniques. This approach is designed to provide a more efficient and accurate means of selecting relevant features in complex data sets.
 
-HQFS uses [QVAR](https://github.com/AlessandroPoggiali/QVAR) to compute the variance of every feature and discard those whose variance is below a given threshold
+HQFS uses [QVAR](https://github.com/AlessandroPoggiali/QVAR)[[1]](#1) to compute the variance of every feature and discard those whose variance is below a given threshold
 
 ## Quickstart
 
@@ -16,3 +16,6 @@ The `test.py` file contains code that will run the HQFS algorithm on both synthe
 
 Note that this is a simple demonstration, and the algorithm's performance may vary depending on the data being used. If you are interested in using the HQFS algorithm for your own data analysis, you may need to modify the code to suit your specific needs.
 
+## References
+<a id="1">[1]</a> 
+Bernasconi, A., Berti, A., Del Corso, G. M., Guidotti, R., & Poggiali, A. (2024). Quantum subroutine for variance estimation: algorithmic design and applications. Quantum Machine Intelligence, 6(2), 78.
